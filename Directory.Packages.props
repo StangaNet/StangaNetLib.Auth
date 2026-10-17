@@ -4,7 +4,7 @@
   </PropertyGroup>
   <ItemGroup>
     <!-- StangaNetLib foundation -->
-    <PackageVersion Include="StangaNetLib.Caching" Version="1.0.0" />
+    <PackageVersion Include="StangaNetLib.Caching" Version="1.0.1" />
     <PackageVersion Include="StangaNetLib.Resilience" Version="1.0.0" />
     <!-- Wilson / JWT — JwtBearer is TFM-conditional via VersionOverride in .csproj -->
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.23.0" />

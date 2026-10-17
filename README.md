@@ -28,7 +28,7 @@ The package is hosted on **GitHub Packages** (pulls Caching / Resilience / Core 
 
 ```xml
 <!-- .csproj -->
-<PackageReference Include="StangaNetLib.Auth" Version="1.0.0" />
+<PackageReference Include="StangaNetLib.Auth" Version="1.0.1" />
 ```
 
 See [CHANGELOG.md](./CHANGELOG.md) for release history.

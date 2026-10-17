@@ -7,6 +7,11 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.0.1] - 2026-10-17
+
+### Fixed
+- Depend on `StangaNetLib.Caching` 1.0.1 (ME 8.x graph). The feed's Caching 1.0.0 nuspec pulled ME 10.x and caused NU1605 downgrade errors under `TreatWarningsAsErrors`.
+
 ## [1.0.0] - 2026-10-17
 
 ### Added
@@ -19,5 +24,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Depends on `StangaNetLib.Caching` 1.0.0 and `StangaNetLib.Resilience` 1.0.0; Microsoft.Extensions.* pinned to 8.x.
 - CI via shared StangaNet reusable workflow (push / PR / manual; publish outside PRs).
 
-[Unreleased]: https://github.com/StangaNet/StangaNetLib.Auth/compare/v1.0.0...HEAD
+[Unreleased]: https://github.com/StangaNet/StangaNetLib.Auth/compare/v1.0.1...HEAD
+[1.0.1]: https://github.com/StangaNet/StangaNetLib.Auth/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/StangaNet/StangaNetLib.Auth/releases/tag/v1.0.0
