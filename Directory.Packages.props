@@ -8,6 +8,7 @@
     <PackageVersion Include="StangaNetLib.Resilience" Version="1.0.0" />
     <!-- Wilson / JWT — JwtBearer is TFM-conditional via VersionOverride in .csproj -->
     <PackageVersion Include="Microsoft.IdentityModel.Tokens" Version="8.23.0" />
+    <PackageVersion Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" Version="8.23.0" />
     <PackageVersion Include="System.IdentityModel.Tokens.Jwt" Version="8.23.0" />
     <!-- Password hashing -->
     <PackageVersion Include="BCrypt.Net-Next" Version="4.2.0" />

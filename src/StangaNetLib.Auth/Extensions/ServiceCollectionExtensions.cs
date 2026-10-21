@@ -2,10 +2,12 @@ using System.Text;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.DependencyInjection.Extensions;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
 using StangaNetLib.Auth.Abstractions;
 using StangaNetLib.Auth.Services;
+using StangaNetLib.Auth.Services.External;
 using StangaNetLib.Auth.Settings;
 using StangaNetLib.Resilience.Execution;
 
@@ -178,4 +180,104 @@ public static class ServiceCollectionExtensions
         services.AddSingleton<IRefreshTokenRepository, InMemoryRefreshTokenRepository>();
         return services;
     }
+
+    /// <summary>
+    /// Registers Google ID-token validation as an <see cref="IExternalIdentityProvider"/>
+    /// and ensures <see cref="IExternalIdentityService"/> is available.
+    /// Bind settings from <see cref="GoogleExternalAuthSettings.SectionName"/>.
+    /// </summary>
+    public static IServiceCollection AddStangaNetLibAuthExternalGoogle(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddOptions<GoogleExternalAuthSettings>()
+            .Bind(configuration.GetSection(GoogleExternalAuthSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        EnsureExternalIdentityService(services);
+        services.TryAddEnumerable(
+            ServiceDescriptor.Singleton<IExternalIdentityProvider, GoogleExternalIdentityProvider>());
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers Sign in with Apple identity-token validation as an <see cref="IExternalIdentityProvider"/>
+    /// and ensures <see cref="IExternalIdentityService"/> is available.
+    /// Bind settings from <see cref="AppleExternalAuthSettings.SectionName"/>.
+    /// </summary>
+    public static IServiceCollection AddStangaNetLibAuthExternalApple(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddOptions<AppleExternalAuthSettings>()
+            .Bind(configuration.GetSection(AppleExternalAuthSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        EnsureExternalIdentityService(services);
+        services.TryAddEnumerable(
+            ServiceDescriptor.Singleton<IExternalIdentityProvider, AppleExternalIdentityProvider>());
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers Facebook access-token validation (Graph <c>debug_token</c> + <c>/me</c>)
+    /// as an <see cref="IExternalIdentityProvider"/> and ensures <see cref="IExternalIdentityService"/> is available.
+    /// Bind settings from <see cref="FacebookExternalAuthSettings.SectionName"/>.
+    /// </summary>
+    /// <param name="services">The service collection to register into.</param>
+    /// <param name="configuration">Application configuration used to bind <see cref="FacebookExternalAuthSettings"/>.</param>
+    /// <param name="configureHttpClient">
+    /// Optional callback to attach resilience handlers or logging to the Facebook Graph <see cref="HttpClient"/>.
+    /// </param>
+    /// <returns>The same <see cref="IServiceCollection"/> for chaining.</returns>
+    public static IServiceCollection AddStangaNetLibAuthExternalFacebook(
+        this IServiceCollection services,
+        IConfiguration configuration,
+        Action<IHttpClientBuilder>? configureHttpClient = null)
+    {
+        services.AddOptions<FacebookExternalAuthSettings>()
+            .Bind(configuration.GetSection(FacebookExternalAuthSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        var builder = services.AddHttpClient(FacebookExternalIdentityProvider.HttpClientName);
+        configureHttpClient?.Invoke(builder);
+
+        EnsureExternalIdentityService(services);
+        services.TryAddEnumerable(
+            ServiceDescriptor.Singleton<IExternalIdentityProvider, FacebookExternalIdentityProvider>());
+
+        return services;
+    }
+
+    /// <summary>
+    /// Registers Microsoft identity platform ID-token validation as an <see cref="IExternalIdentityProvider"/>
+    /// and ensures <see cref="IExternalIdentityService"/> is available.
+    /// Bind settings from <see cref="MicrosoftExternalAuthSettings.SectionName"/>.
+    /// </summary>
+    public static IServiceCollection AddStangaNetLibAuthExternalMicrosoft(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddOptions<MicrosoftExternalAuthSettings>()
+            .Bind(configuration.GetSection(MicrosoftExternalAuthSettings.SectionName))
+            .ValidateDataAnnotations()
+            .ValidateOnStart();
+
+        EnsureExternalIdentityService(services);
+        services.TryAddEnumerable(
+            ServiceDescriptor.Singleton<IExternalIdentityProvider, MicrosoftExternalIdentityProvider>());
+
+        return services;
+    }
+
+    private static void EnsureExternalIdentityService(IServiceCollection services)
+    {
+        services.TryAddSingleton<IExternalIdentityService, ExternalIdentityService>();
+    }
 }
+
