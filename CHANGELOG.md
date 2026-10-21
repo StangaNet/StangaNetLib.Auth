@@ -7,6 +7,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - 2026-10-21
+
+### Added
+- External identity token exchange: `IExternalIdentityProvider`, `IExternalIdentityService`, and `ExternalIdentity`.
+- Providers for Google, Apple, and Microsoft (OIDC ID token / JWKS) and Facebook (Graph `debug_token` + `/me`).
+- DI: `AddStangaNetLibAuthExternalGoogle` / `Apple` / `Facebook` / `Microsoft` with options under `Auth:External:*`.
+- Package dependency on `Microsoft.IdentityModel.Protocols.OpenIdConnect` 8.23.0.
+
+### Fixed
+- README pipeline quick-start now documents `UseStangaNetLibAuth` (replacing the outdated `UseStangaNetLibAuthTokenRevocation` name).
+
 ## [1.0.1] - 2026-10-17
 
 ### Fixed
@@ -24,6 +35,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Depends on `StangaNetLib.Caching` 1.0.0 and `StangaNetLib.Resilience` 1.0.0; Microsoft.Extensions.* pinned to 8.x.
 - CI via shared StangaNet reusable workflow (push / PR / manual; publish outside PRs).
 
-[Unreleased]: https://github.com/StangaNet/StangaNetLib.Auth/compare/v1.0.1...HEAD
+[Unreleased]: https://github.com/StangaNet/StangaNetLib.Auth/compare/v1.1.0...HEAD
+[1.1.0]: https://github.com/StangaNet/StangaNetLib.Auth/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/StangaNet/StangaNetLib.Auth/compare/v1.0.0...v1.0.1
 [1.0.0]: https://github.com/StangaNet/StangaNetLib.Auth/releases/tag/v1.0.0

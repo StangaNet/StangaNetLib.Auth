@@ -1,17 +1,18 @@
 # StangaNetLib.Auth
 
 [![.NET CI](https://github.com/StangaNet/StangaNetLib.Auth/actions/workflows/main.yml/badge.svg)](https://github.com/StangaNet/StangaNetLib.Auth/actions/workflows/main.yml)
-![NuGet](https://img.shields.io/badge/nuget-1.0.0-blue)
+![NuGet](https://img.shields.io/badge/nuget-1.1.0-blue)
 ![.NET](https://img.shields.io/badge/.NET-8.0%20%7C%209.0-512BD4)
 
-JWT authentication for ASP.NET Core: self-signed HMAC-SHA256 with per-device refresh rotation, BCrypt password hashing, cache-backed token revocation, and Auth0 (RS256 / JWKS + Management API). Uses [`StangaNetLib.Caching`](https://github.com/StangaNet/StangaNetLib.Caching) for the revocation blacklist and optionally [`StangaNetLib.Resilience`](https://github.com/StangaNet/StangaNetLib.Resilience) for Auth0 Management HTTP calls. Auth0 Management methods return `Result` / `Result<T>` from [`StangaNetLib.Core`](https://github.com/StangaNet/StangaNetLib.Core).
+JWT authentication for ASP.NET Core: self-signed HMAC-SHA256 with per-device refresh rotation, BCrypt password hashing, cache-backed token revocation, Auth0 (RS256 / JWKS + Management API), and **external identity token exchange** (Google, Apple, Facebook, Microsoft). Uses [`StangaNetLib.Caching`](https://github.com/StangaNet/StangaNetLib.Caching) for the revocation blacklist and optionally [`StangaNetLib.Resilience`](https://github.com/StangaNet/StangaNetLib.Resilience) for Auth0 Management HTTP calls. Auth0 Management and external identity methods return `Result` / `Result<T>` from [`StangaNetLib.Core`](https://github.com/StangaNet/StangaNetLib.Core).
 
 ## Design Philosophy
 
-- **Domain-centric**: tokens, passwords, revocation, Auth0 as capabilities.
-- **Functional failures**: Auth0 Management API maps to `Result` / `Result<T>`.
+- **Domain-centric**: tokens, passwords, revocation, Auth0, and external IdPs as capabilities.
+- **Functional failures**: Auth0 Management API and external identity validation map to `Result` / `Result<T>`.
 - **Pluggable storage**: `IRefreshTokenRepository`; revocation via `ICacheService`.
 - **Modern .NET**: `net8.0` / `net9.0` with ASP.NET Core authentication middleware.
+- **Token exchange**: clients send Google/Apple/Microsoft ID tokens or Facebook access tokens; the library verifies them and returns `ExternalIdentity` — your app maps to a local user and issues StangaNet JWTs.
 
 ## Installation
 
@@ -28,7 +29,7 @@ The package is hosted on **GitHub Packages** (pulls Caching / Resilience / Core 
 
 ```xml
 <!-- .csproj -->
-<PackageReference Include="StangaNetLib.Auth" Version="1.0.1" />
+<PackageReference Include="StangaNetLib.Auth" Version="1.1.0" />
 ```
 
 See [CHANGELOG.md](./CHANGELOG.md) for release history.
@@ -37,12 +38,12 @@ See [CHANGELOG.md](./CHANGELOG.md) for release history.
 
 | Namespace | Components | Purpose |
 |---|---|---|
-| `StangaNetLib.Auth.Abstractions` | `IJwtTokenGenerator`, `IPasswordHasher`, `IRefreshTokenRepository`, … | Public contracts |
-| `StangaNetLib.Auth.Models` | `RefreshToken`, `DeviceInfo`, `JwtClaims`, … | Domain models |
-| `StangaNetLib.Auth.Settings` | `JwtSettings`, `Auth0Settings` | Configuration |
-| `StangaNetLib.Auth.Services` | JWT / BCrypt / Auth0 / in-memory store | Implementations |
+| `StangaNetLib.Auth.Abstractions` | `IJwtTokenGenerator`, `IPasswordHasher`, `IRefreshTokenRepository`, `IExternalIdentityProvider`, `IExternalIdentityService`, … | Public contracts |
+| `StangaNetLib.Auth.Models` | `RefreshToken`, `DeviceInfo`, `JwtClaims`, `ExternalIdentity`, `ExternalAuthProviders`, … | Domain models |
+| `StangaNetLib.Auth.Settings` | `JwtSettings`, `Auth0Settings`, `*ExternalAuthSettings` | Configuration |
+| `StangaNetLib.Auth.Services` | JWT / BCrypt / Auth0 / external IdPs / in-memory store | Implementations |
 | `StangaNetLib.Auth.Middleware` | `TokenRevocationMiddleware` | Per-request jti blacklist |
-| `StangaNetLib.Auth.Extensions` | `AddStangaNetLibAuth`, … | DI / pipeline |
+| `StangaNetLib.Auth.Extensions` | `AddStangaNetLibAuth`, `AddStangaNetLibAuthExternalGoogle`, … | DI / pipeline |
 
 ## Project Structure
 
@@ -59,6 +60,7 @@ StangaNetLib.Auth/
 │       ├── Middleware/
 │       ├── Models/
 │       ├── Services/
+│       │   └── External/
 │       └── Settings/
 └── tests/
     └── StangaNetLib.Auth.Tests/
@@ -71,10 +73,59 @@ builder.Services.AddStangaNetLibInMemoryCache(); // or Redis via AddStangaNetLib
 builder.Services.AddStangaNetLibAuth(builder.Configuration);
 builder.Services.AddStangaNetLibAuthInMemoryTokenStore(); // replace in production
 
-app.UseAuthentication();
-app.UseStangaNetLibAuthTokenRevocation();
-app.UseAuthorization();
+app.UseRouting();
+app.UseStangaNetLibAuth();
 ```
+
+## External identity providers (token exchange)
+
+Register only the providers you need. Each call also registers `IExternalIdentityService`.
+
+```csharp
+builder.Services.AddStangaNetLibAuth(builder.Configuration);
+builder.Services.AddStangaNetLibAuthExternalGoogle(builder.Configuration);
+builder.Services.AddStangaNetLibAuthExternalApple(builder.Configuration);
+builder.Services.AddStangaNetLibAuthExternalFacebook(builder.Configuration);
+builder.Services.AddStangaNetLibAuthExternalMicrosoft(builder.Configuration);
+```
+
+```json
+{
+  "Auth": {
+    "External": {
+      "Google": { "ClientIds": [ "xxx.apps.googleusercontent.com" ] },
+      "Apple": { "ClientIds": [ "com.example.service", "com.example.app" ] },
+      "Facebook": { "AppId": "...", "AppSecret": "..." },
+      "Microsoft": { "ClientIds": [ "app-guid" ], "TenantId": "common" }
+    }
+  }
+}
+```
+
+```csharp
+app.MapPost("/auth/external", async (
+    ExternalLoginRequest body,
+    IExternalIdentityService external,
+    IJwtTokenGenerator jwt) =>
+{
+    var identity = await external.ValidateAsync(body.Provider, body.Token);
+    if (identity.IsFailure)
+        return Results.Unauthorized();
+
+    // Map identity.Value to your local user, then:
+    var access = jwt.GenerateAccessToken(userId, email, roles, body.DeviceId);
+    return Results.Ok(new { access });
+});
+```
+
+| Provider | Token type | Validation |
+|---|---|---|
+| Google | OIDC ID token | JWKS via Google OpenID configuration |
+| Apple | OIDC ID token | JWKS via Apple OpenID configuration |
+| Microsoft | OIDC ID token | JWKS via Entra ID v2.0 metadata |
+| Facebook | Access token | Graph `debug_token` + `/me` |
+
+Account linking and user persistence stay in the consuming application.
 
 ## CI/CD
 
