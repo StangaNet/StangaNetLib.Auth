@@ -1,6 +1,6 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net8.0;net9.0</TargetFrameworks>
+    <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <AssemblyName>StangaNetLib.Auth</AssemblyName>
     <RootNamespace>StangaNetLib.Auth</RootNamespace>
     <Version>1.1.0</Version>
@@ -19,17 +19,12 @@
 
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" VersionOverride="8.*" Condition="'$(TargetFramework)' == 'net8.0'" />
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" VersionOverride="9.*" Condition="'$(TargetFramework)' == 'net9.0'" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" VersionOverride="10.*" Condition="'$(TargetFramework)' == 'net10.0'" />
 
     <PackageReference Include="Microsoft.IdentityModel.Tokens" />
     <PackageReference Include="Microsoft.IdentityModel.Protocols.OpenIdConnect" />
     <PackageReference Include="System.IdentityModel.Tokens.Jwt" />
     <PackageReference Include="BCrypt.Net-Next" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Abstractions" />
-    <PackageReference Include="Microsoft.Extensions.Configuration.Binder" />
-    <PackageReference Include="Microsoft.Extensions.DependencyInjection.Abstractions" />
-    <PackageReference Include="Microsoft.Extensions.Options" />
-    <PackageReference Include="Microsoft.Extensions.Options.ConfigurationExtensions" />
-    <PackageReference Include="Microsoft.Extensions.Options.DataAnnotations" />
   </ItemGroup>
 
   <ItemGroup>
