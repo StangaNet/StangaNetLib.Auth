@@ -8,6 +8,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ## [Unreleased]
 
 
+## [1.2.0] - 2026-10-23
+
+### Added
+- Pluggable `IPasswordHasher` registration via `TryAddSingleton` (BCrypt remains the default).
+- Argon2id hasher (`Argon2idPasswordHasher`) and `AddStangaNetLibAuthArgon2id`.
+- TOTP MFA (`ITotpService` / `TotpService`) with otpauth URI and recovery codes; `AddStangaNetLibAuthTotp`.
+- Login attempt lockout (`ILoginAttemptService` / `InMemoryLoginAttemptService`); `AddStangaNetLibAuthLoginLockout`.
+- Self-hosted profile `AddStangaNetLibAuthSelfHosted` (JWT + Argon2id + TOTP + lockout, no Auth0/IdP).
+
 ## [1.1.1] - 2026-10-23
 
 ### Changed
@@ -43,7 +52,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - Depends on `StangaNetLib.Caching` 1.0.0 and `StangaNetLib.Resilience` 1.0.0; Microsoft.Extensions.* pinned to 8.x.
 - CI via shared StangaNet reusable workflow (push / PR / manual; publish outside PRs).
 
-[Unreleased]: https://github.com/StangaNet/StangaNetLib.Auth/compare/v1.1.1...HEAD
+[Unreleased]: https://github.com/StangaNet/StangaNetLib.Auth/compare/v1.2.0...HEAD
+[1.2.0]: https://github.com/StangaNet/StangaNetLib.Auth/compare/v1.1.1...v1.2.0
 [1.1.1]: https://github.com/StangaNet/StangaNetLib.Auth/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/StangaNet/StangaNetLib.Auth/compare/v1.0.1...v1.1.0
 [1.0.1]: https://github.com/StangaNet/StangaNetLib.Auth/compare/v1.0.0...v1.0.1

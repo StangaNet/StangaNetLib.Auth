@@ -42,8 +42,8 @@ public static class ServiceCollectionExtensions
             ?? throw new InvalidOperationException(
                 $"Missing required configuration section '{JwtSettings.SectionName}'.");
 
-        services.AddSingleton<IJwtTokenGenerator,      JwtTokenGenerator>();
-        services.AddSingleton<IPasswordHasher,         PasswordHasher>();
+        services.AddSingleton<IJwtTokenGenerator, JwtTokenGenerator>();
+        services.TryAddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<ITokenRevocationService, CacheTokenRevocationService>();
 
         services
@@ -95,7 +95,7 @@ public static class ServiceCollectionExtensions
             ?? throw new InvalidOperationException(
                 $"Missing required configuration section '{Auth0Settings.SectionName}'.");
 
-        services.AddSingleton<IPasswordHasher,         PasswordHasher>();
+        services.TryAddSingleton<IPasswordHasher, PasswordHasher>();
         services.AddSingleton<ITokenRevocationService, CacheTokenRevocationService>();
 
         services
@@ -178,6 +178,84 @@ public static class ServiceCollectionExtensions
         this IServiceCollection services)
     {
         services.AddSingleton<IRefreshTokenRepository, InMemoryRefreshTokenRepository>();
+        return services;
+    }
+
+    /// <summary>
+    /// Replaces the password hasher with Argon2id (PHC string format).
+    /// Call after <see cref="AddStangaNetLibAuth"/> or <see cref="AddStangaNetLibAuth0"/>.
+    /// </summary>
+    public static IServiceCollection AddStangaNetLibAuthArgon2id(
+        this IServiceCollection services,
+        IConfiguration? configuration = null,
+        Action<Argon2idSettings>? configure = null)
+    {
+        var options = services.AddOptions<Argon2idSettings>();
+        if (configuration is not null)
+            options.Bind(configuration.GetSection(Argon2idSettings.SectionName));
+        if (configure is not null)
+            options.Configure(configure);
+        options.ValidateDataAnnotations().ValidateOnStart();
+
+        services.RemoveAll<IPasswordHasher>();
+        services.AddSingleton<IPasswordHasher, Argon2idPasswordHasher>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers <see cref="ITotpService"/> for RFC 6238 TOTP MFA and recovery codes.
+    /// </summary>
+    public static IServiceCollection AddStangaNetLibAuthTotp(
+        this IServiceCollection services,
+        IConfiguration? configuration = null,
+        Action<TotpSettings>? configure = null)
+    {
+        var options = services.AddOptions<TotpSettings>();
+        if (configuration is not null)
+            options.Bind(configuration.GetSection(TotpSettings.SectionName));
+        if (configure is not null)
+            options.Configure(configure);
+        options.ValidateDataAnnotations().ValidateOnStart();
+
+        services.TryAddSingleton<ITotpService, TotpService>();
+        return services;
+    }
+
+    /// <summary>
+    /// Registers <see cref="ILoginAttemptService"/> (in-memory) with lockout settings.
+    /// </summary>
+    public static IServiceCollection AddStangaNetLibAuthLoginLockout(
+        this IServiceCollection services,
+        IConfiguration? configuration = null,
+        Action<LoginLockoutSettings>? configure = null)
+    {
+        var options = services.AddOptions<LoginLockoutSettings>();
+        if (configuration is not null)
+            options.Bind(configuration.GetSection(LoginLockoutSettings.SectionName));
+        if (configure is not null)
+            options.Configure(configure);
+        options.ValidateDataAnnotations().ValidateOnStart();
+
+        services.TryAddSingleton<ILoginAttemptService, InMemoryLoginAttemptService>();
+        return services;
+    }
+
+    /// <summary>
+    /// Self-hosted profile: HMAC JWT + refresh primitives, Argon2id hasher, TOTP, and login lockout.
+    /// Does not register Auth0 or external IdP providers.
+    /// </summary>
+    /// <remarks>
+    /// Register an <see cref="IRefreshTokenRepository"/> (or call
+    /// <see cref="AddStangaNetLibAuthInMemoryTokenStore"/>) separately.
+    /// </remarks>
+    public static IServiceCollection AddStangaNetLibAuthSelfHosted(
+        this IServiceCollection services,
+        IConfiguration configuration)
+    {
+        services.AddStangaNetLibAuth(configuration);
+        services.AddStangaNetLibAuthArgon2id(configuration);
+        services.AddStangaNetLibAuthTotp(configuration);
+        services.AddStangaNetLibAuthLoginLockout(configuration);
         return services;
     }
 
