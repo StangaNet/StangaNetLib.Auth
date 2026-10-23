@@ -3,7 +3,7 @@
     <TargetFrameworks>net8.0;net9.0;net10.0</TargetFrameworks>
     <AssemblyName>StangaNetLib.Auth</AssemblyName>
     <RootNamespace>StangaNetLib.Auth</RootNamespace>
-    <Version>1.1.0</Version>
+    <Version>1.1.1</Version>
     <Description>JWT authentication with per-device refresh token rotation, BCrypt password hashing, cache-backed token revocation blacklist, Auth0 integration (JWKS + Management API), and external identity token exchange (Google, Apple, Facebook, Microsoft). Depends on StangaNetLib.Caching and StangaNetLib.Resilience.</Description>
     <PackageTags>jwt;auth0;authentication;refresh-token;bcrypt;password;google;apple;facebook;microsoft;oidc;external;aspnetcore;stanganet</PackageTags>
   </PropertyGroup>

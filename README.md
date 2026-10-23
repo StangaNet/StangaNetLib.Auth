@@ -1,7 +1,7 @@
 # StangaNetLib.Auth
 
 [![.NET CI](https://github.com/StangaNet/StangaNetLib.Auth/actions/workflows/main.yml/badge.svg)](https://github.com/StangaNet/StangaNetLib.Auth/actions/workflows/main.yml)
-![NuGet](https://img.shields.io/badge/nuget-1.1.0-blue)
+![NuGet](https://img.shields.io/badge/nuget-1.1.1-blue)
 ![.NET](https://img.shields.io/badge/.NET-8.0%20%7C%209.0%20%7C%2010.0-512BD4)
 
 JWT authentication for ASP.NET Core: self-signed HMAC-SHA256 with per-device refresh rotation, BCrypt password hashing, cache-backed token revocation, Auth0 (RS256 / JWKS + Management API), and **external identity token exchange** (Google, Apple, Facebook, Microsoft). Uses [`StangaNetLib.Caching`](https://github.com/StangaNet/StangaNetLib.Caching) for the revocation blacklist and optionally [`StangaNetLib.Resilience`](https://github.com/StangaNet/StangaNetLib.Resilience) for Auth0 Management HTTP calls. Auth0 Management and external identity methods return `Result` / `Result<T>` from [`StangaNetLib.Core`](https://github.com/StangaNet/StangaNetLib.Core).
